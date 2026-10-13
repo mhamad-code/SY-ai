@@ -25,7 +25,7 @@ object AuthManager {
     
     // Your Web Client ID from Firebase Console
     // TODO: Replace with actual Web Client ID from google-services.json
-    private const val WEB_CLIENT_ID = "81954501703-5lh5f9eah4tql8acd51vc2a86nhcl0sp.apps.googleusercontent.com"
+    private const val WEB_CLIENT_ID = "709666422177-or89o8iu1ddbba2em0kkit4cjernagfp.apps.googleusercontent.com"
     
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
     private val _currentUser = MutableStateFlow<FirebaseUser?>(auth.currentUser)

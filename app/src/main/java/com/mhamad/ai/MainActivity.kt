@@ -462,18 +462,15 @@ class MainActivity : AppCompatActivity() {
                                             
                                             // Title with custom font
                                             Text(
-                                                text = "MARK",
+                                                text = androidx.compose.ui.text.buildAnnotatedString {
+                                                    append("SY-")
+                                                    pushStyle(androidx.compose.ui.text.SpanStyle(color = appColors.accent))
+                                                    append("AI")
+                                                    pop()
+                                                },
                                                 fontSize = 24.sp,
                                                 fontFamily = FontFamily(Font(R.font.typographica)),
                                                 color = MaterialTheme.colorScheme.onSurface,
-                                                letterSpacing = 1.sp
-                                            )
-                                            Spacer(modifier = Modifier.width(6.dp))
-                                            Text(
-                                                text = "VII",
-                                                fontSize = 24.sp,
-                                                fontFamily = FontFamily(Font(R.font.typographica)),
-                                                color = appColors.accent,
                                                 letterSpacing = 1.sp
                                             )
                                         }
