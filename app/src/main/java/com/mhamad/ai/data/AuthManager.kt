@@ -161,6 +161,12 @@ object AuthManager {
             val authResult = auth.signInWithEmailAndPassword(email, password).await()
             val user = authResult.user
             if (user != null) {
+                user.reload().await()
+                if (!user.isEmailVerified) {
+                    runCatching { user.sendEmailVerification().await() }
+                    auth.signOut()
+                    return Result.failure(Exception("EMAIL_NOT_VERIFIED|Please verify your email first. We sent you a new verification link."))
+                }
                 Log.d(TAG, "Email sign-in successful: ${user.email}")
                 Result.success(user)
             } else {
@@ -186,14 +192,13 @@ object AuthManager {
                     .build()
                 user.updateProfile(profileUpdates).await()
                 
-                // Force reload to ensure display name is updated in the user object
-                user.reload().await()
+                // Send verification email, then sign out until the email is verified
+                user.sendEmailVerification().await()
+                auth.signOut()
+                _currentUser.value = null
                 
-                // Manually trigger a flow update by emitting the current user
-                _currentUser.value = auth.currentUser
-                
-                Log.d(TAG, "Email sign-up successful: ${auth.currentUser?.email}")
-                Result.success(auth.currentUser!!)
+                Log.d(TAG, "Email sign-up successful, verification sent to: $email")
+                Result.failure(Exception("VERIFY_EMAIL|Account created. We sent a verification link to $email. Open it, then log in."))
             } else {
                 Result.failure(Exception("SIGN_UP_FAILED|Account created but user is null"))
             }

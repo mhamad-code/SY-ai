@@ -37,6 +37,13 @@ class ChatViewModel : ViewModel() {
                 _chatState.update { it.copy(currentUser = user) }
                 
                 if (user != null) {
+                    // Reset everything so no data from a previous account leaks in
+                    _chatState.update { it.copy(
+                        chatSessions = emptyList(),
+                        chatList = mutableListOf(),
+                        currentSessionId = null,
+                        showPromptSuggestions = true
+                    ) }
                     // User signed in - load sessions list from Firestore (but don't open any)
                     loadUserSessions(user.uid)
                     
@@ -132,6 +139,7 @@ class ChatViewModel : ViewModel() {
             
             is ChatUiEvent.SignOut -> {
                 AuthManager.signOut()
+                ChatHistoryManager.clearChatHistory()
             }
             
             is ChatUiEvent.CreateNewSession -> {
@@ -711,6 +719,7 @@ class ChatViewModel : ViewModel() {
                 _chatState.update { it.copy(chatSessions = sessions) }
             }.onFailure { error ->
                 Log.e("ChatViewModel", "Failed to load sessions: ${error.message}")
+                showDebugToast("Load failed: ${error.message}")
             }
         }
     }
@@ -881,6 +890,7 @@ class ChatViewModel : ViewModel() {
                     }
                 }.onFailure { error ->
                     Log.e("ChatViewModel", "Failed to delete session: ${error.message}")
+                    showDebugToast("Delete failed: ${error.message}")
                 }
             } else {
                 _chatState.update { state ->
@@ -925,23 +935,20 @@ class ChatViewModel : ViewModel() {
                         loadUserSessions(userId)
                     }
                 }
-            } else {
-                val localHistory = ChatHistoryManager.loadChatHistory()
-                if (localHistory.isNotEmpty()) {
-                    val result = FirestoreChatManager.loadUserSessions(userId)
-                    result.onSuccess { sessions ->
-                        if (sessions.isEmpty()) {
-                            val createResult = FirestoreChatManager.createSession(userId, "Migrated Chat")
-                            createResult.onSuccess { newSession ->
-                                FirestoreChatManager.saveSession(newSession, localHistory)
-                            }
-                        }
-                    }
-                }
             }
         }
     }
     
+    private fun showDebugToast(message: String) {
+        android.os.Handler(android.os.Looper.getMainLooper()).post {
+            android.widget.Toast.makeText(
+                com.google.firebase.FirebaseApp.getInstance().applicationContext,
+                message,
+                android.widget.Toast.LENGTH_LONG
+            ).show()
+        }
+    }
+
     companion object {
         private const val GUEST_USER_ID = "guest"
     }
