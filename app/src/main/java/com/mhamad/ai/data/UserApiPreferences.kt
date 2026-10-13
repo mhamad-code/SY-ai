@@ -1,0 +1,118 @@
+package com.mhamad.ai.data
+
+import android.content.Context
+import android.content.SharedPreferences
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+
+/**
+ * Manages user-provided API keys and preferences
+ */
+object UserApiPreferences {
+    private const val PREFS_NAME = "user_api_prefs"
+    private const val KEY_GEMINI_API_KEY = "gemini_api_key"
+    private const val KEY_GEMINI_ENABLED = "gemini_enabled"
+    private const val KEY_OPENROUTER_API_KEY = "openrouter_api_key"
+    private const val KEY_OPENROUTER_ENABLED = "openrouter_enabled"
+    private const val KEY_GROQ_API_KEY = "groq_api_key"
+    private const val KEY_GROQ_ENABLED = "groq_enabled"
+    
+    private const val KEY_HAS_SEEN_API_KEY_WARNING = "has_seen_api_key_warning"
+    private const val KEY_BOOKMARKED_MODELS = "bookmarked_models" 
+    
+    private lateinit var prefs: SharedPreferences
+    
+    // Gemini Config
+    private val _geminiApiKey = MutableStateFlow("")
+    val geminiApiKey: StateFlow<String> = _geminiApiKey.asStateFlow()
+    
+    private val _isGeminiKeyEnabled = MutableStateFlow(false)
+    val isGeminiKeyEnabled: StateFlow<Boolean> = _isGeminiKeyEnabled.asStateFlow()
+    
+    // OpenRouter Config
+    private val _openRouterApiKey = MutableStateFlow("")
+    val openRouterApiKey: StateFlow<String> = _openRouterApiKey.asStateFlow()
+    
+    private val _isOpenRouterKeyEnabled = MutableStateFlow(false)
+    val isOpenRouterKeyEnabled: StateFlow<Boolean> = _isOpenRouterKeyEnabled.asStateFlow()
+
+    // Groq Config
+    private val _groqApiKey = MutableStateFlow("")
+    val groqApiKey: StateFlow<String> = _groqApiKey.asStateFlow()
+
+    private val _isGroqKeyEnabled = MutableStateFlow(false)
+    val isGroqKeyEnabled: StateFlow<Boolean> = _isGroqKeyEnabled.asStateFlow()
+    
+    // Bookmarks
+    private val _bookmarkedModels = MutableStateFlow<Set<String>>(emptySet())
+    val bookmarkedModels: StateFlow<Set<String>> = _bookmarkedModels.asStateFlow()
+
+    // UI Warnings
+    private val _hasSeenApiKeyWarning = MutableStateFlow(false)
+    val hasSeenApiKeyWarning: StateFlow<Boolean> = _hasSeenApiKeyWarning.asStateFlow()
+    
+    fun init(context: Context) {
+        prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        
+        // Load saved values
+        _geminiApiKey.value = prefs.getString(KEY_GEMINI_API_KEY, "") ?: ""
+        _isGeminiKeyEnabled.value = prefs.getBoolean(KEY_GEMINI_ENABLED, false)
+        
+        _openRouterApiKey.value = prefs.getString(KEY_OPENROUTER_API_KEY, "") ?: ""
+        _isOpenRouterKeyEnabled.value = prefs.getBoolean(KEY_OPENROUTER_ENABLED, false)
+
+        _groqApiKey.value = prefs.getString(KEY_GROQ_API_KEY, "") ?: ""
+        _isGroqKeyEnabled.value = prefs.getBoolean(KEY_GROQ_ENABLED, false)
+        
+        _hasSeenApiKeyWarning.value = prefs.getBoolean(KEY_HAS_SEEN_API_KEY_WARNING, false)
+        _bookmarkedModels.value = prefs.getStringSet(KEY_BOOKMARKED_MODELS, emptySet()) ?: emptySet()
+    }
+    
+    fun setGeminiApiKey(key: String) {
+        _geminiApiKey.value = key
+        prefs.edit().putString(KEY_GEMINI_API_KEY, key).apply()
+    }
+    
+    fun setGeminiKeyEnabled(enabled: Boolean) {
+        _isGeminiKeyEnabled.value = enabled
+        prefs.edit().putBoolean(KEY_GEMINI_ENABLED, enabled).apply()
+    }
+    
+    fun setOpenRouterApiKey(key: String) {
+        _openRouterApiKey.value = key
+        prefs.edit().putString(KEY_OPENROUTER_API_KEY, key).apply()
+    }
+    
+    fun setOpenRouterKeyEnabled(enabled: Boolean) {
+        _isOpenRouterKeyEnabled.value = enabled
+        prefs.edit().putBoolean(KEY_OPENROUTER_ENABLED, enabled).apply()
+    }
+
+    fun setGroqApiKey(key: String) {
+        _groqApiKey.value = key
+        prefs.edit().putString(KEY_GROQ_API_KEY, key).apply()
+    }
+
+    fun setGroqKeyEnabled(enabled: Boolean) {
+        _isGroqKeyEnabled.value = enabled
+        prefs.edit().putBoolean(KEY_GROQ_ENABLED, enabled).apply()
+    }
+
+    fun toggleModelBookmark(apiModel: String) {
+        val currentSet = _bookmarkedModels.value.toMutableSet()
+        if (currentSet.contains(apiModel)) {
+            currentSet.remove(apiModel)
+        } else {
+            currentSet.add(apiModel)
+        }
+        _bookmarkedModels.value = currentSet
+        prefs.edit().putStringSet(KEY_BOOKMARKED_MODELS, currentSet).apply()
+    }
+
+    fun setHasSeenApiKeyWarning(hasSeen: Boolean) {
+        _hasSeenApiKeyWarning.value = hasSeen
+        prefs.edit().putBoolean(KEY_HAS_SEEN_API_KEY_WARNING, hasSeen).apply()
+    }
+}
+
